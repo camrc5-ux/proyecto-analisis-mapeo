@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/python-visualization/folium/folium/templates/leaflet.awesome.rotate.min.css"/>
+    
+            <meta name="viewport" content="width=device-width,
+                initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+            <style>
+                #map_307f957915375ccc65056bf0ab91f3e4 {
+                    position: relative;
+                    width: 100.0%;
+                    height: 100.0%;
+                    left: 0.0%;
+                    top: 0.0%;
+                }
+                .leaflet-container { font-size: 1rem; }
+            </style>
+
+            <style>html, body {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            </style>
+
+            <style>#map {
+                position:absolute;
+                top:0;
+                bottom:0;
+                right:0;
+                left:0;
+                }
+            </style>
+
+            <script>
+                L_NO_TOUCH = false;
+                L_DISABLE_3D = false;
+            </script>
+
+        
+</head>
+<body>
+    
+    
+<style>
+    #btn-agregar {
+        position: fixed; top: 20px; right: 20px; z-index: 9999; 
+        background-color: #28a745; color: white; padding: 12px 20px; 
+        font-size: 16px; font-weight: bold; border: none; border-radius: 8px; 
+        box-shadow: 0 4px 6px rgba(0,0,0,0.3); cursor: pointer;
+    }
+    #btn-agregar.activo { background-color: #dc3545; }
+    #info-coordenadas {
+        position: fixed; bottom: 20px; left: 20px; z-index: 9999; 
+        background: white; padding: 10px 15px; border-radius: 5px; 
+        box-shadow: 0 2px 5px rgba(0,0,0,0.3); font-family: Arial, sans-serif; font-size: 14px;
+    }
+</style>
+
+<button id="btn-agregar">➕ Agregar Incidencia</button>
+<div id="info-coordenadas">Haz clic en "Agregar Incidencia" para activar el modo reporte.</div>
+
+<script>
+window.addEventListener('DOMContentLoaded', function() {
+    var map = map_307f957915375ccc65056bf0ab91f3e4;
+    var modoReporteActivo = false;
+    var latSeleccionada = null;
+    var lngSeleccionada = null;
+    var marcadorTemporal = null;
+
+    var btnAgregar = document.getElementById('btn-agregar');
+    var infoCoo = document.getElementById('info-coordenadas');
+
+    btnAgregar.addEventListener('click', function(e) {
+        e.stopPropagation();
+        modoReporteActivo = !modoReporteActivo;
+        
+        if (modoReporteActivo) {
+            btnAgregar.classList.add('activo');
+            btnAgregar.innerHTML = "❌ Cancelar Reporte";
+            infoCoo.innerHTML = "<b>Modo activo:</b> Haz clic en el mapa donde ocurrió el incidente.";
+        } else {
+            modoReporteActivo = false;
+            btnAgregar.classList.remove('activo');
+            btnAgregar.innerHTML = "➕ Agregar Incidencia";
+            infoCoo.innerHTML = "Modo cancelado.";
+            if (marcadorTemporal) {
+                map.removeLayer(marcadorTemporal);
+                marcadorTemporal = null;
+            }
+        }
+    });
+
+    map.on('click', function(e) {
+        if (!modoReporteActivo) return;
+
+        latSeleccionada = e.latlng.lat;
+        lngSeleccionada = e.latlng.lng;
+
+        if (marcadorTemporal !== null) {
+            map.removeLayer(marcadorTemporal);
+        }
+
+        var contenidoPopup = `
+            <div style="text-align: center; font-family: Arial, sans-serif; min-width: 160px;">
+                <b>¿Confirmar ubicación?</b><br>
+                <span style="font-size: 11px; color: gray;">Lat: ${latSeleccionada.toFixed(5)}, Lng: ${lngSeleccionada.toFixed(5)}</span><br><br>
+                <button id="btn-confirmar-ubicacion" style="background-color: #007bff; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; width: 100%;">
+                    ✅ Confirmar Ubicación
+                </button>
+            </div>
+        `;
+
+        marcadorTemporal = L.marker([latSeleccionada, lngSeleccionada]).addTo(map)
+            .bindPopup(contenidoPopup)
+            .openPopup();
+
+        infoCoo.innerHTML = "<b>Pin colocado.</b> Abre el globo para confirmar.";
+    });
+
+    // Al confirmar, viajamos al formulario pasando las coordenadas directamente en el enlace
+    document.addEventListener('click', function(e) {
+        if (e.target && e.target.id === 'btn-confirmar-ubicacion') {
+            e.stopPropagation(); 
+
+            if (latSeleccionada !== null && lngSeleccionada !== null) {
+                // Redirigimos adjuntando lat y lng en la URL de forma limpia
+                window.location.href = "formulario_incidente.html?lat=" + latSeleccionada + "&lng=" + lngSeleccionada;
+            }
+        }
+    });
+});
+</script>
+    
+            <div class="folium-map" id="map_307f957915375ccc65056bf0ab91f3e4" ></div>
+        
+</body>
+<script>
+    
+    
+            var map_307f957915375ccc65056bf0ab91f3e4 = L.map(
+                "map_307f957915375ccc65056bf0ab91f3e4",
+                {
+                    center: [15.4019, -87.7958],
+                    crs: L.CRS.EPSG3857,
+                    ...{
+  "zoom": 15,
+  "zoomControl": true,
+  "preferCanvas": false,
+}
+
+                }
+            );
+
+            
+
+        
+    
+            var tile_layer_9619d1ca270dd86a701311cdae7f8b19 = L.tileLayer(
+                "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",
+                {
+  "minZoom": 0,
+  "maxZoom": 17,
+  "maxNativeZoom": 17,
+  "noWrap": false,
+  "attribution": "Map data: \u0026copy; \u003ca href=\"https://www.openstreetmap.org/copyright\"\u003eOpenStreetMap\u003c/a\u003e contributors, \u003ca href=\"http://viewfinderpanoramas.org\"\u003eSRTM\u003c/a\u003e | Map style: \u0026copy; \u003ca href=\"https://opentopomap.org\"\u003eOpenTopoMap\u003c/a\u003e (\u003ca href=\"https://creativecommons.org/licenses/by-sa/3.0/\"\u003eCC-BY-SA\u003c/a\u003e)",
+  "subdomains": "abc",
+  "detectRetina": false,
+  "tms": false,
+  "opacity": 1,
+}
+
+            );
+        
+    
+            tile_layer_9619d1ca270dd86a701311cdae7f8b19.addTo(map_307f957915375ccc65056bf0ab91f3e4);
+        
+    
+            var polygon_bb847d593b1fdf50d05dde2dc0dea027 = L.polygon(
+                [[15.44, -87.83], [15.44, -87.76], [15.36, -87.76], [15.36, -87.83]],
+                {"bubblingMouseEvents": true, "color": "red", "dashArray": null, "dashOffset": null, "fill": false, "fillColor": "red", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 1.0, "smoothFactor": 1.0, "stroke": true, "weight": 2}
+            ).addTo(map_307f957915375ccc65056bf0ab91f3e4);
+        
+    
+            polygon_bb847d593b1fdf50d05dde2dc0dea027.bindTooltip(
+                `<div>
+                     Límite del Municipio: El Progreso, Yoro
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+</script>
+</html>

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Módulo de Registro de Incidencias</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f6f9;
+            margin: 0;
+            padding: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .tarjeta-formulario {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 450px;
+        }
+        h2 { margin-top: 0; color: #333; }
+        .caja-coordenadas {
+            background: #e9ecef;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 13px;
+            color: #495057;
+            margin-bottom: 20px;
+        }
+        label { display: block; margin-top: 15px; font-size: 14px; font-weight: bold; color: #555; }
+        select, textarea {
+            width: 100%; padding: 10px; margin-top: 5px; box-sizing: border-box;
+            border: 1px solid #ced4da; border-radius: 6px; font-size: 14px;
+        }
+        button {
+            margin-top: 25px;
+            width: 100%;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        button:hover { background-color: #218838; }
+        .advertencia { color: #dc3545; font-size: 13px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <div class="tarjeta-formulario">
+        <h2> Registrar Incidencia Municipal</h2>
+        
+        <!-- Caja donde mostraremos las coordenadas leídas de la URL -->
+        <div class="caja-coordenadas" id="info-ubicacion">
+             Leyendo ubicación...
+        </div>
+
+        <form id="form-incidente" onsubmit="enviarABaseDeDatos(event)">
+            <label for="tipo">Tipo de Incidencia:</label>
+            <select id="tipo" required>
+                <option value="">Seleccione una opción...</option>
+                <option value="Bache">Bache en la vía</option>
+                <option value="Fuga de agua">Fuga de agua</option>
+                <option value="Alumbrado">Alumbrado público dañado</option>
+                <option value="Basura">Basura acumulada</option>
+            </select>
+
+            <label for="descripcion">Descripción de los hechos:</label>
+            <textarea id="descripcion" rows="4" placeholder="Describa el problema detalladamente" required></textarea>
+
+            <button type="submit" id="btn-enviar">Enviar incidencia</button>
+        </form>
+    </div>
+
+    <script>
+        // 1. LEEMOS LAS COORDENADAS DIRECTAMENTE DESDE LA URL (URLSearchParams)
+        const urlParams = new URLSearchParams(window.location.search);
+        let latObtenida = urlParams.get('lat');
+        let lngObtenida = urlParams.get('lng');
+
+        const cajaUbicacion = document.getElementById('info-ubicacion');
+
+        if (latObtenida && lngObtenida) {
+            // Si la URL trae las coordenadas, las mostramos y habilitamos todo
+            cajaUbicacion.innerHTML = `<b> Ubicación capturada:</b><br>Latitud: ${parseFloat(latObtenida).toFixed(5)}<br>Longitud: ${parseFloat(lngObtenida).toFixed(5)}`;
+        } else {
+            // Si intentan entrar al formulario directamente sin pasar por el mapa
+            cajaUbicacion.innerHTML = ` <b>No hay ubicación seleccionada.</b> Debes elegir un punto en el mapa primero.`;
+            document.getElementById('form-incidente').style.opacity = '0.5';
+            document.querySelectorAll('input, select, textarea, button').forEach(el => el.disabled = true);
+        }
+
+        // 2. SIMULACIÓN DE ENVÍO
+        function enviarABaseDeDatos(event) {
+            event.preventDefault();
+
+            let tipo = document.getElementById('tipo').value;
+            let descripcion = document.getElementById('descripcion').value;
+
+            let datosParaBD = {
+                latitud: latObtenida,
+                longitud: lngObtenida,
+                tipo_incidente: tipo,
+                descripcion: descripcion,
+                fecha: new Date().toISOString()
+            };
+
+            console.log("Enviando a la BD:", datosParaBD);
+            alert("¡Éxito! El reporte se ha guardado correctamente en la Base de Datos.\n\n" + 
+                  "Lat: " + latObtenida + " | Lng: " + lngObtenida + "\n" +
+                  "Tipo: " + tipo);
+
+            // Regresamos al mapa limpio
+            window.location.href = "index.html";
+        }
+    </script>
+</body>
+</html>
