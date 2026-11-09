@@ -1,3 +1,4 @@
+<!-- formulario de incidentes -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -81,7 +82,7 @@
     </div>
 
     <script>
-        // 1. LEEMOS LAS COORDENADAS DIRECTAMENTE DESDE LA URL (URLSearchParams)
+        // leer coordenadas desde la URL (URLSearchParams)
         const urlParams = new URLSearchParams(window.location.search);
         let latObtenida = urlParams.get('lat');
         let lngObtenida = urlParams.get('lng');
@@ -98,7 +99,7 @@
             document.querySelectorAll('input, select, textarea, button').forEach(el => el.disabled = true);
         }
 
-        // 2. SIMULACIÓN DE ENVÍO
+        // envio (simulación :v)
         function enviarABaseDeDatos(event) {
             event.preventDefault();
 
