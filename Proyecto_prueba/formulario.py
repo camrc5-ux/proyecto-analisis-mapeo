@@ -1,7 +1,7 @@
 import folium
 import os
 
-# 1. Creamos el mapa base centrado en El Progreso
+#Creamos el mapa base centrado en El Progreso
 mi_mapa = folium.Map(
     location=[15.4019, -87.7958], 
     zoom_start=15,
@@ -10,7 +10,7 @@ mi_mapa = folium.Map(
 
 nombre_mapa_js = mi_mapa.get_name()
 
-# 2. Definir límites de El Progreso (Contorno rojo)
+# Definir límites de El Progreso (opcional)
 limites_el_progreso = [
     [15.4400, -87.8300],
     [15.4400, -87.7600],
@@ -27,7 +27,7 @@ folium.Polygon(
 ).add_to(mi_mapa)
 
 
-# 3. CÓDIGO HTML/CSS/JS CON ENVÍO DE COORDENADAS POR URL
+# código HTML/CSS/JS con envíos de coordenadas URL
 macro_html = f"""
 <style>
     #btn-agregar {{
